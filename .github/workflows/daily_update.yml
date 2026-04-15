@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install feedparser pandas #requests
+          pip install feedparser pandas requests
 
       - name: Run scraper
         run: python update_kb.py
