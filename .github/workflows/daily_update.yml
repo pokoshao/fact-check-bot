@@ -22,7 +22,7 @@ jobs:
           pip install feedparser pandas requests
 
       - name: Run scraper
-        run: python update_kb.py
+        run: python update_kb.py request
 
       - name: Commit and Push changes
         run: |
