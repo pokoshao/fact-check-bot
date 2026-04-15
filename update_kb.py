@@ -4,7 +4,7 @@ import requests
 import io
 from datetime import datetime
 
-# 1. 重新定義來源 (確保是 Dict 嵌套 Dict 格式)
+# 1. 重新定義來源
 RSS_SOURCES = {
     "聯合新聞網": {"url": "https://udn.com/rssfeed/news/2/6638?ch=news", "lang": "zh"},
     "自由時報": {"url": "https://news.ltn.com.tw/rss/all.xml", "lang": "zh"},
@@ -21,13 +21,10 @@ def update_knowledge_base():
 
     print(f"🚀 [START] 任務啟動時間: {datetime.now()}")
 
-    # 關鍵檢查：這裡 name 會拿到 key, info 會拿到 value (即那組小字典)
     for name, info in RSS_SOURCES.items():
         print(f"🔎 正在嘗試連線: {name}...")
         
-        # 多加一層檢查，避免 info 還是字串
         if not isinstance(info, dict):
-            print(f"❌ 錯誤: {name} 的資料格式不正確，預期是字典但拿到 {type(info)}")
             continue
 
         try:
@@ -54,23 +51,20 @@ def update_knowledge_base():
             print(f"💥 {name} 發生異常: {str(e)}")
             summary_report.append({"來源": name, "狀態": "異常", "筆數": 0})
 
-   df = pd.DataFrame(all_articles)
+    # --- 注意！這裡要跟上方的 for 對齊 ---
+    df = pd.DataFrame(all_articles)
     if not df.empty:
         df.drop_duplicates(subset=["url"], inplace=True)
-        
-        # 1. 存成 CSV (你原本就有的)
+        # 同時存 CSV 和 JSONL
         df.to_csv("knowledge_base_raw.csv", index=False, encoding="utf-8-sig")
-        
-        # 2. 存成 JSONL (機器人正在找的這個，補上這行！)
         df.to_json("nemo_training_data.jsonl", orient="records", lines=True, force_ascii=False)
         
         print("\n--- 📊 最終統計報告 ---")
         print(pd.DataFrame(summary_report).to_string(index=False))
-        print(f"\n📦 總計去重後: {len(df)} 筆資料已存檔。")
         return df
     else:
         print("\n😱 仍未抓到任何資料。")
         return pd.DataFrame()
 
-# 執行
-df = update_knowledge_base()
+if __name__ == "__main__":
+    update_knowledge_base()
