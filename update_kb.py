@@ -28,7 +28,7 @@ def update_knowledge_base():
             continue
 
         try:
-            resp = requests.get(info["url"], headers=headers, timeout=20)
+            resp = requests.get(info["url"], headers=headers, timeout=30)
             if resp.status_code == 200:
                 feed = feedparser.parse(io.BytesIO(resp.content))
                 count = 0
