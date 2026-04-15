@@ -1,0 +1,33 @@
+name: Daily News Update
+
+on:
+  schedule:
+    - cron: '0 22 * * *' # 每天台灣時間早上 6 點執行 (UTC 22:00)
+  workflow_dispatch:      # 允許手動點擊執行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install feedparser pandas
+
+      - name: Run scraper
+        run: python update_kb.py
+
+      - name: Commit and Push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add knowledge_base_raw.csv nemo_training_data.jsonl
+          git commit -m "Auto-update knowledge base: $(date)" || exit 0
+          git push
