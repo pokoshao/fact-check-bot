@@ -54,12 +54,19 @@ def update_knowledge_base():
             print(f"💥 {name} 發生異常: {str(e)}")
             summary_report.append({"來源": name, "狀態": "異常", "筆數": 0})
 
-    df = pd.DataFrame(all_articles)
+   df = pd.DataFrame(all_articles)
     if not df.empty:
         df.drop_duplicates(subset=["url"], inplace=True)
+        
+        # 1. 存成 CSV (你原本就有的)
         df.to_csv("knowledge_base_raw.csv", index=False, encoding="utf-8-sig")
+        
+        # 2. 存成 JSONL (機器人正在找的這個，補上這行！)
+        df.to_json("nemo_training_data.jsonl", orient="records", lines=True, force_ascii=False)
+        
         print("\n--- 📊 最終統計報告 ---")
         print(pd.DataFrame(summary_report).to_string(index=False))
+        print(f"\n📦 總計去重後: {len(df)} 筆資料已存檔。")
         return df
     else:
         print("\n😱 仍未抓到任何資料。")
