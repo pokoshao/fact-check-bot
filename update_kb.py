@@ -22,6 +22,7 @@ def update_knowledge_base():
 
     # 1. 生成當前的時間戳記 (例如: 20260424_0945)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+    df.to_csv(f"kb_raw_{timestamp}.csv", index=False, encoding="utf-8-sig")
     print(f"🚀 [START] 任務啟動時間: {datetime.now()}")
 
     for name, info in RSS_SOURCES.items():
