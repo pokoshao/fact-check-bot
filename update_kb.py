@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 import io
 from datetime import datetime
+import os
 
 # 1. 重新定義來源
 RSS_SOURCES = {
@@ -19,6 +20,8 @@ def update_knowledge_base():
     summary_report = []
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
 
+    # 1. 生成當前的時間戳記 (例如: 20260424_0945)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
     print(f"🚀 [START] 任務啟動時間: {datetime.now()}")
 
     for name, info in RSS_SOURCES.items():
@@ -43,22 +46,26 @@ def update_knowledge_base():
                         "fetched_at": datetime.now().strftime("%Y-%m-%d"),
                     })
                     count += 1
-                print(f"✅ {name}: 成功抓取 {count} 筆")
                 summary_report.append({"來源": name, "狀態": "成功", "筆數": count})
             else:
                 summary_report.append({"來源": name, "狀態": f"HTTP {resp.status_code}", "筆數": 0})
         except Exception as e:
-            print(f"💥 {name} 發生異常: {str(e)}")
             summary_report.append({"來源": name, "狀態": "異常", "筆數": 0})
 
-    # --- 注意！這裡要跟上方的 for 對齊 ---
+    # 2. 修改存檔邏輯
     df = pd.DataFrame(all_articles)
     if not df.empty:
         df.drop_duplicates(subset=["url"], inplace=True)
-        # 同時存 CSV 和 JSONL
-        df.to_csv("knowledge_base_raw.csv", index=False, encoding="utf-8-sig")
-        df.to_json("nemo_training_data.jsonl", orient="records", lines=True, force_ascii=False)
         
+        # --- 關鍵修改：使用時間戳記作為檔名 ---
+        csv_filename = f"kb_raw_{timestamp}.csv"
+        jsonl_filename = f"nemo_raw_{timestamp}.jsonl"
+        
+        # 存檔
+        df.to_csv(csv_filename, index=False, encoding="utf-8-sig")
+        df.to_json(jsonl_filename, orient="records", lines=True, force_ascii=False)
+        
+        print(f"\n✅ 檔案已生成: {csv_filename}")
         print("\n--- 📊 最終統計報告 ---")
         print(pd.DataFrame(summary_report).to_string(index=False))
         return df
