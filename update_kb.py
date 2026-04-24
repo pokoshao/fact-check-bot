@@ -20,11 +20,11 @@ def update_knowledge_base():
     summary_report = []
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
 
-    # 取得時間戳記
+    # 生成當前的時間戳記
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
     print(f"🚀 [START] 任務啟動時間: {datetime.now()}")
 
-    # --- 抓取邏輯 ---
+    # --- 步驟 1: 抓取資料 ---
     for name, info in RSS_SOURCES.items():
         print(f"🔎 正在嘗試連線: {name}...")
         
@@ -55,18 +55,17 @@ def update_knowledge_base():
             print(f"💥 {name} 發生異常: {str(e)}")
             summary_report.append({"來源": name, "狀態": "異常", "筆數": 0})
 
-    # --- 存檔邏輯 (修正關鍵：確保 df 先被定義) ---
+    # --- 步驟 2: 建立 DataFrame (修正關鍵) ---
     df = pd.DataFrame(all_articles)
-    
+
+    # --- 步驟 3: 存檔邏輯 ---
     if not df.empty:
-        # 去除重複網址
         df.drop_duplicates(subset=["url"], inplace=True)
         
-        # 定義檔名
         csv_filename = f"kb_raw_{timestamp}.csv"
         jsonl_filename = f"nemo_raw_{timestamp}.jsonl"
         
-        # 執行存檔
+        # 存檔動作必須在 df 定義之後
         df.to_csv(csv_filename, index=False, encoding="utf-8-sig")
         df.to_json(jsonl_filename, orient="records", lines=True, force_ascii=False)
         
@@ -75,7 +74,7 @@ def update_knowledge_base():
         print(pd.DataFrame(summary_report).to_string(index=False))
         return df
     else:
-        print("\n😱 仍未抓到任何資料，略過存檔程序。")
+        print("\n😱 警告：本次任務沒抓到任何資料，略過存檔動作。")
         return pd.DataFrame()
 
 if __name__ == "__main__":
