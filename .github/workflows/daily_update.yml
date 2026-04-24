@@ -29,15 +29,14 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # 1. 先抓取遠端更新，避免衝突
+          # 1. 關鍵步驟：先從遠端拉取更新並進行 rebase，解決衝突
           git pull --rebase origin main
           
-          # 2. 加入新產生的時間戳記檔案
+          # 2. 加入你新產生的時間戳記檔案
           git add kb_raw_*.csv nemo_raw_*.jsonl
           
-          # 3. 提交並推送到雲端
-          # 如果沒有檔案變更，commit 會回傳 1，所以加上 || exit 0
-          git commit -m "Auto-update knowledge base: $(date)" || exit 0
+          # 3. 提交變更 (加上 || exit 0 防止沒變更時報錯)
+          git commit -m "Auto-update knowledge base: $(date) [skip ci]" || exit 0
           
-          # 4. 推送，如果還是失敗就嘗試強制推送 (請小心使用)
+          # 4. 推送到遠端
           git push origin main
