@@ -1,24 +1,49 @@
-- name: Commit and Push
+name: Update Knowledge Base
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # 給予寫入權限，防止 Push 時出現 Permission Denied
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install feedparser pandas requests
+
+      - name: Run Scraper
+        run: python update_kb.py
+
+      - name: Commit and Push
         run: |
-          # 1. 基本設定
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # 2. 暫存目前的修改（你的新 CSV 資料）
+          # 解決 Rejected 衝突的終極方案：先暫存本地修改，強制同步遠端，再貼回修改
           git add kb_raw_*.csv nemo_raw_*.jsonl
           git stash
-          
-          # 3. 強制同步遠端最新的 main 分支
           git fetch origin main
           git checkout main
           git reset --hard origin/main
-          
-          # 4. 把剛才抓到的新資料拿回來
           git stash pop || echo "No stashed changes to apply"
           
-          # 5. 重新加入檔案並提交
+          # 提交並推送
           git add kb_raw_*.csv nemo_raw_*.jsonl
-          git commit -m "Auto-update knowledge base: $(date) [skip ci]" || exit 0
-          
-          # 6. 推送
+          git commit -m "Auto-update: $(date) [skip ci]" || exit 0
           git push origin main
