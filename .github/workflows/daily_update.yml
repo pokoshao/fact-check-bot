@@ -5,7 +5,7 @@ on:
     - cron: '0 0 * * *'
   workflow_dispatch:
 
-# --- 關鍵：在全域設定環境變數 ---
+# 加入這行可以直接壓制警告並強制使用新環境
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
 
@@ -13,27 +13,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4 # 確保這裡是 v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5 # 確保這裡是 v5
+      - uses: actions/checkout@v4 # 確保是 v4
+      - uses: actions/setup-python@v5 # 確保是 v5
         with:
           python-version: '3.10'
-
+      
       - name: Install Dependencies
-        run: |
-          pip install feedparser pandas requests
-
+        run: pip install feedparser pandas requests
+        
       - name: Run Scraper
-        # 這裡會跑你剛剛修改過的「時間戳記版」Python 腳本
-        run: python your_script_name.py 
-
+        run: python update_kb.py # 確認檔名正確
+        
       - name: Commit and Push
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          # 使用星號 (*) 確保每天產生的新 CSV/JSONL 都會被抓到
-          git add kb_raw_*.csv nemo_raw_*.jsonl 
-          git commit -m "Add new daily knowledge base data [skip ci]" || exit 0
-          git push
+        uses: stefanzweifel/git-auto-commit-action@v5 # 如果你有用這個，也要升級到 v5
+        with:
+          commit_message: "Auto update data"
+          file_pattern: 'kb_raw_*.csv nemo_raw_*.jsonl'
