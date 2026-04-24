@@ -1,33 +1,36 @@
-name: Daily News Update
+name: Update Knowledge Base
 
 on:
   schedule:
-    - cron: '0 22 * * *' # 每天台灣時間早上 6 點執行 (UTC 22:00)
-  workflow_dispatch:      # 允許手動點擊執行
+    - cron: '0 0 * * *' # 每天凌晨執行一次
+  workflow_dispatch: # 允許手動執行
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # 1. 更新為 v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4 
 
+      # 2. 更新為 v5
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           pip install feedparser pandas requests
 
-      - name: Run scraper
-        run: python update_kb.py request
+      - name: Run Scraper
+        run: python your_script_name.py # 記得換成你的檔名
 
-      - name: Commit and Push changes
+      - name: Commit and Push
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add knowledge_base_raw.csv nemo_training_data.jsonl
-          git commit -m "Auto-update knowledge base: $(date)" || exit 0
+          # 這裡確保能抓到所有時間戳記的檔案
+          git add kb_raw_*.csv nemo_raw_*.jsonl 
+          git commit -m "Add new daily knowledge base data [skip ci]" || exit 0
           git push
