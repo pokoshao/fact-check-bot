@@ -2,18 +2,18 @@ name: Update Knowledge Base
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 每天凌晨執行一次
-  workflow_dispatch: # 允許手動執行
+    - cron: '0 0 * * *' # 每天凌晨執行一次 (UTC)
+  workflow_dispatch: # 允許你隨時手動點擊執行
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # 1. 更新為 v4
+      # 更新至 v4，移除 Deprecation 警告
       - name: Checkout Repository
         uses: actions/checkout@v4 
 
-      # 2. 更新為 v5
+      # 更新至 v5，完美支援 Node 24
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -24,13 +24,14 @@ jobs:
           pip install feedparser pandas requests
 
       - name: Run Scraper
-        run: python your_script_name.py # 記得換成你的檔名
+        # 這裡會跑你剛剛修改過的「時間戳記版」Python 腳本
+        run: python your_script_name.py 
 
       - name: Commit and Push
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          # 這裡確保能抓到所有時間戳記的檔案
+          # 使用星號 (*) 確保每天產生的新 CSV/JSONL 都會被抓到
           git add kb_raw_*.csv nemo_raw_*.jsonl 
           git commit -m "Add new daily knowledge base data [skip ci]" || exit 0
           git push
