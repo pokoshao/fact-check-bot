@@ -20,11 +20,11 @@ def update_knowledge_base():
     summary_report = []
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
 
-    # 1. 生成當前的時間戳記 (例如: 20260424_0945)
+    # 取得時間戳記
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-    df.to_csv(f"kb_raw_{timestamp}.csv", index=False, encoding="utf-8-sig")
     print(f"🚀 [START] 任務啟動時間: {datetime.now()}")
 
+    # --- 抓取邏輯 ---
     for name, info in RSS_SOURCES.items():
         print(f"🔎 正在嘗試連線: {name}...")
         
@@ -47,31 +47,35 @@ def update_knowledge_base():
                         "fetched_at": datetime.now().strftime("%Y-%m-%d"),
                     })
                     count += 1
+                print(f"✅ {name}: 成功抓取 {count} 筆")
                 summary_report.append({"來源": name, "狀態": "成功", "筆數": count})
             else:
                 summary_report.append({"來源": name, "狀態": f"HTTP {resp.status_code}", "筆數": 0})
         except Exception as e:
+            print(f"💥 {name} 發生異常: {str(e)}")
             summary_report.append({"來源": name, "狀態": "異常", "筆數": 0})
 
-    # 2. 修改存檔邏輯
+    # --- 存檔邏輯 (修正關鍵：確保 df 先被定義) ---
     df = pd.DataFrame(all_articles)
+    
     if not df.empty:
+        # 去除重複網址
         df.drop_duplicates(subset=["url"], inplace=True)
         
-        # --- 關鍵修改：使用時間戳記作為檔名 ---
+        # 定義檔名
         csv_filename = f"kb_raw_{timestamp}.csv"
         jsonl_filename = f"nemo_raw_{timestamp}.jsonl"
         
-        # 存檔
+        # 執行存檔
         df.to_csv(csv_filename, index=False, encoding="utf-8-sig")
         df.to_json(jsonl_filename, orient="records", lines=True, force_ascii=False)
         
-        print(f"\n✅ 檔案已生成: {csv_filename}")
+        print(f"\n✅ 檔案已成功生成: {csv_filename}")
         print("\n--- 📊 最終統計報告 ---")
         print(pd.DataFrame(summary_report).to_string(index=False))
         return df
     else:
-        print("\n😱 仍未抓到任何資料。")
+        print("\n😱 仍未抓到任何資料，略過存檔程序。")
         return pd.DataFrame()
 
 if __name__ == "__main__":
