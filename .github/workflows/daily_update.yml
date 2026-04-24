@@ -1,42 +1,24 @@
-name: Update Knowledge Base
-
-on:
-  schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
-
-# 加入這行可以直接壓制警告並強制使用新環境
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4 # 確保是 v4
-      - uses: actions/setup-python@v5 # 確保是 v5
-        with:
-          python-version: '3.10'
-      
-      - name: Install Dependencies
-        run: pip install feedparser pandas requests
-        
-      - name: Run Scraper
-        run: python update_kb.py # 確認檔名正確
-        
-      - name: Commit and Push
+- name: Commit and Push
         run: |
+          # 1. 基本設定
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # 1. 關鍵步驟：先從遠端拉取更新並進行 rebase，解決衝突
-          git pull --rebase origin main
-          
-          # 2. 加入你新產生的時間戳記檔案
+          # 2. 暫存目前的修改（你的新 CSV 資料）
           git add kb_raw_*.csv nemo_raw_*.jsonl
+          git stash
           
-          # 3. 提交變更 (加上 || exit 0 防止沒變更時報錯)
+          # 3. 強制同步遠端最新的 main 分支
+          git fetch origin main
+          git checkout main
+          git reset --hard origin/main
+          
+          # 4. 把剛才抓到的新資料拿回來
+          git stash pop || echo "No stashed changes to apply"
+          
+          # 5. 重新加入檔案並提交
+          git add kb_raw_*.csv nemo_raw_*.jsonl
           git commit -m "Auto-update knowledge base: $(date) [skip ci]" || exit 0
           
-          # 4. 推送到遠端
+          # 6. 推送
           git push origin main
