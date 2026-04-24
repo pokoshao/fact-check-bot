@@ -24,13 +24,9 @@ def update_knowledge_base():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
     print(f"🚀 [START] 任務啟動時間: {datetime.now()}")
 
-    # --- 步驟 1: 抓取資料 ---
+    # --- 步驟 A: 先抓資料 (這部分不會用到 df) ---
     for name, info in RSS_SOURCES.items():
         print(f"🔎 正在嘗試連線: {name}...")
-        
-        if not isinstance(info, dict):
-            continue
-
         try:
             resp = requests.get(info["url"], headers=headers, timeout=30)
             if resp.status_code == 200:
@@ -47,34 +43,30 @@ def update_knowledge_base():
                         "fetched_at": datetime.now().strftime("%Y-%m-%d"),
                     })
                     count += 1
-                print(f"✅ {name}: 成功抓取 {count} 筆")
                 summary_report.append({"來源": name, "狀態": "成功", "筆數": count})
             else:
                 summary_report.append({"來源": name, "狀態": f"HTTP {resp.status_code}", "筆數": 0})
         except Exception as e:
-            print(f"💥 {name} 發生異常: {str(e)}")
             summary_report.append({"來源": name, "狀態": "異常", "筆數": 0})
 
-    # --- 步驟 2: 建立 DataFrame (修正關鍵) ---
+    # --- 步驟 B: 資料抓完後，才定義 df ---
     df = pd.DataFrame(all_articles)
 
-    # --- 步驟 3: 存檔邏輯 ---
+    # --- 步驟 C: 最後才執行存檔 ---
     if not df.empty:
         df.drop_duplicates(subset=["url"], inplace=True)
         
         csv_filename = f"kb_raw_{timestamp}.csv"
         jsonl_filename = f"nemo_raw_{timestamp}.jsonl"
         
-        # 存檔動作必須在 df 定義之後
+        # 這裡才執行 to_csv，絕對不會報 referenced before assignment
         df.to_csv(csv_filename, index=False, encoding="utf-8-sig")
         df.to_json(jsonl_filename, orient="records", lines=True, force_ascii=False)
         
         print(f"\n✅ 檔案已成功生成: {csv_filename}")
-        print("\n--- 📊 最終統計報告 ---")
-        print(pd.DataFrame(summary_report).to_string(index=False))
         return df
     else:
-        print("\n😱 警告：本次任務沒抓到任何資料，略過存檔動作。")
+        print("\n😱 本次沒抓到資料。")
         return pd.DataFrame()
 
 if __name__ == "__main__":
