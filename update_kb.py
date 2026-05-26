@@ -11,7 +11,12 @@ RSS_SOURCES = {
     "MyGoPen": {"url": "https://www.mygopen.com/feeds/posts/default", "lang": "zh"},
     "TFC台灣事實查核": {"url": "https://tfc-taiwan.org.tw/feed", "lang": "zh"},
     "Snopes": {"url": "https://www.snopes.com/feed/", "lang": "en"},
-    "PolitiFact": {"url": "https://www.politifact.com/rss/all/", "lang": "en"}
+    "PolitiFact": {"url": "https://www.politifact.com/rss/all/", "lang": "en"},
+    "BR24": {"url": "https://www.br.de/nachrichten/recht-und-justiz/index~rss.xml", "lang": "de"},
+    "Provereno.Media": {"url": "https://provereno.media/feed/", "lang": "ru"},
+    "CORRECTIV": {"url": "https://correctiv.org/feed/", "lang": "de"},
+    "Fact-Watch": {"url": "https://www.fact-watch.org/feed/", "lang": "ja"},
+    "Annahar (EN)": {"url": "https://fr.annahar.com/en/feed/", "lang": "en"}
 }
 
 def update_knowledge_base():
